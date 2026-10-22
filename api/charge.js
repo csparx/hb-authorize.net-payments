@@ -1,16 +1,14 @@
 // POST /api/charge  -> validates, recalculates the total, verifies bot protection,
-// charges via Authorize.net, and logs the attempt.
-//
-// SECTION 6 (receipt + internal emails) is intentionally NOT built yet: waiting on the
-// email provider decision (SES vs Resend). See the TODO below.
+// charges via Authorize.net, logs the attempt, and on approval sends the receipt + internal emails.
 
 import { randomUUID } from 'node:crypto';
 import { getAccount } from '../lib/accounts.js';
 import { chargeCard } from '../lib/authnet.js';
+import { sendPaymentEmails } from '../lib/email.js';
 import { applyCors, clientIp, parseBody, sendJson } from '../lib/http.js';
 import { computeAmounts } from '../lib/money.js';
 import { checkRateLimit } from '../lib/ratelimit.js';
-import { insertTransaction } from '../lib/supabase.js';
+import { insertTransaction, updateTransaction } from '../lib/supabase.js';
 import { verifyTurnstile } from '../lib/turnstile.js';
 import { validateCharge } from '../lib/validate.js';
 
@@ -120,8 +118,9 @@ export default async function handler(req, res) {
     internal_email_sent: false,
     ip_address: ip,
   };
+  let rowId = null;
   try {
-    await insertTransaction(row);
+    rowId = await insertTransaction(row);
   } catch (err) {
     // The charge already happened; don't turn a logged-elsewhere success into a failure.
     console.error(
@@ -129,8 +128,26 @@ export default async function handler(req, res) {
     );
   }
 
-  // TODO(Section 6): on approval, send customer receipt + internal notification to hbcc@hattonbrown.com,
-  // then update receipt_email_sent / internal_email_sent. Blocked on email provider choice.
+  // 6. On success, send the customer receipt + internal notification. Never affects the response.
+  let emails = { receipt: false, internal: false };
+  if (result.status === 'approved') {
+    emails = await sendPaymentEmails({
+      account: account.code,
+      environment: account.environment,
+      values,
+      amounts,
+      transactionId: result.transactionId,
+      last4: result.last4,
+      cardType: result.cardType || values.cardType,
+    });
+    if (rowId && (emails.receipt || emails.internal)) {
+      try {
+        await updateTransaction(rowId, { receipt_email_sent: emails.receipt, internal_email_sent: emails.internal });
+      } catch (err) {
+        console.error(`charge: email flag update failed txn=${result.transactionId}: ${err.message}`);
+      }
+    }
+  }
 
   if (result.status === 'approved') {
     return sendJson(res, 200, {
@@ -141,6 +158,7 @@ export default async function handler(req, res) {
       invoiceAmount: amounts.invoiceAmount,
       convenienceFee: amounts.convenienceFee,
       totalCharged: amounts.totalCharged,
+      receiptEmailSent: emails.receipt,
     });
   }
   return sendJson(res, result.status === 'declined' ? 402 : 502, { ok: false, status: result.status, error: result.userMessage });

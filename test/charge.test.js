@@ -23,7 +23,7 @@ test('approved: server recalculates total, calls sandbox Authorize.net, logs, re
   assert.equal(res.statusCode, 200);
   assert.deepEqual(res.body, {
     ok: true, transactionId: '60123456789', last4: '1111', cardType: 'Visa',
-    invoiceAmount: '1000.00', convenienceFee: '30.00', totalCharged: '1030.00',
+    invoiceAmount: '1000.00', convenienceFee: '30.00', totalCharged: '1030.00', receiptEmailSent: true,
   });
 
   const an = find(net.calls, 'apitest.authorize.net');
@@ -153,4 +153,100 @@ test('a failed log write does not turn an approved charge into a failure', async
   const res = await run(validBody());
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.ok, true);
+});
+
+// ---- Section 6: emails (Resend) ----
+
+const emailCalls = (calls) => calls.filter((c) => c.url.includes('api.resend.com')).map((c) => ({ ...c, json: JSON.parse(c.init.body) }));
+
+test('approved: sends customer receipt + internal notification, then records the flags', async () => {
+  net = installFetch();
+  const res = await run(validBody({ company: 'Acme Panels' }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.receiptEmailSent, true);
+
+  const [receipt, internal] = emailCalls(net.calls);
+  assert.deepEqual(receipt.json.to, ['ada@example.com']);
+  assert.equal(receipt.init.headers.Authorization, 'Bearer re_test');
+  assert.equal(receipt.init.headers['Idempotency-Key'], 'receipt-60123456789');
+  for (const needle of ['Acme Panels', 'INV-1', 'Annual ad', '$1,000.00', '$30.00', '$1,030.00', 'Visa ending in 1111', '60123456789']) {
+    assert.ok(receipt.json.html.includes(needle), `receipt html has ${needle}`);
+    assert.ok(receipt.json.text.includes(needle), `receipt text has ${needle}`);
+  }
+
+  assert.deepEqual(internal.json.to, ['hbcc@hattonbrown.com']);
+  assert.equal(internal.json.subject, '[SANDBOX] [PW] Payment received — $1,030.00 — Acme Panels');
+  assert.equal(internal.json.reply_to, 'ada@example.com');
+  for (const needle of ['Ada Lovelace', '+44 20 7946 0958', 'ada@example.com', 'sandbox']) {
+    assert.ok(internal.json.html.includes(needle), `internal html has ${needle}`);
+  }
+
+  const patch = find(net.calls, 'supabase.co', 'PATCH');
+  assert.ok(patch.url.includes('id=eq.row-1'));
+  assert.deepEqual(JSON.parse(patch.init.body), { receipt_email_sent: true, internal_email_sent: true });
+});
+
+test('live-mode internal subject matches the spec exactly (no sandbox tag)', async () => {
+  setEnv({ AUTHNET_SANDBOX_MODE: 'false', AUTHNET_PW_LOGIN_ID: 'l', AUTHNET_PW_TXN_KEY: 't', AUTHNET_PW_CLIENT_KEY: 'c' });
+  net = installFetch();
+  await run(validBody({ company: 'Acme Panels' }));
+  assert.equal(emailCalls(net.calls)[1].json.subject, '[PW] Payment received — $1,030.00 — Acme Panels');
+});
+
+test('SANDBOX_NOTIFY_EMAIL redirects internal mail in sandbox only', async () => {
+  setEnv({ SANDBOX_NOTIFY_EMAIL: 'me@example.com, you@example.com' });
+  net = installFetch();
+  await run(validBody());
+  assert.deepEqual(emailCalls(net.calls)[1].json.to, ['me@example.com', 'you@example.com']);
+});
+
+test('customer-supplied text is HTML-escaped and cannot inject subject lines', async () => {
+  net = installFetch();
+  await run(validBody({ company: 'Evil<script>alert(1)</script>\nBcc: x@y.z', chargeDescription: '<img src=x onerror=alert(1)>' }));
+  const [receipt, internal] = emailCalls(net.calls);
+  assert.equal(receipt.json.html.includes('<script>'), false);
+  assert.equal(receipt.json.html.includes('<img'), false);
+  assert.ok(receipt.json.html.includes('&lt;script&gt;'));
+  assert.equal(/[\r\n]/.test(internal.json.subject), false);
+});
+
+test('no emails for declined or errored payments', async () => {
+  net = installFetch({ authnet: () => json(authnetDeclined) });
+  await run(validBody());
+  assert.equal(emailCalls(net.calls).length, 0);
+});
+
+test('email failure never affects the approved response; flags stay false', async () => {
+  net = installFetch({ resend: () => new Response('{"message":"nope"}', { status: 422 }) });
+  const res = await run(validBody());
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.ok, true);
+  assert.equal(res.body.receiptEmailSent, false);
+  assert.equal(find(net.calls, 'supabase.co', 'PATCH'), undefined);
+});
+
+test('one email failing does not stop the other', async () => {
+  let n = 0;
+  net = installFetch({ resend: () => (++n === 1 ? new Response('x', { status: 422 }) : json({ id: 'ok' })) });
+  await run(validBody());
+  assert.deepEqual(JSON.parse(find(net.calls, 'supabase.co', 'PATCH').init.body), { receipt_email_sent: false, internal_email_sent: true });
+});
+
+test('a 429 from Resend is retried once with the same idempotency key', async () => {
+  let n = 0;
+  net = installFetch({ resend: () => (++n === 1 ? new Response('slow down', { status: 429 }) : json({ id: 'ok' })) });
+  const res = await run(validBody());
+  assert.equal(res.body.receiptEmailSent, true);
+  const calls = emailCalls(net.calls);
+  assert.equal(calls[0].init.headers['Idempotency-Key'], calls[1].init.headers['Idempotency-Key']);
+});
+
+test('missing Resend config: charge still succeeds, nothing sent', async () => {
+  setEnv();
+  delete process.env.RESEND_API_KEY;
+  net = installFetch();
+  const res = await run(validBody());
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.receiptEmailSent, false);
+  assert.equal(emailCalls(net.calls).length, 0);
 });

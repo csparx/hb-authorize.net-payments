@@ -9,10 +9,12 @@ export const ENV = {
   SUPABASE_SERVICE_ROLE_KEY: 'service-role',
   TURNSTILE_SECRET_KEY: 'ts-secret',
   TURNSTILE_SITE_KEY: 'ts-site',
+  RESEND_API_KEY: 're_test',
+  EMAIL_FROM: 'Hatton-Brown <payments@example.com>',
 };
 
 export function setEnv(extra = {}) {
-  for (const k of Object.keys(process.env)) if (k.startsWith('AUTHNET_') || k === 'VERCEL_ENV') delete process.env[k];
+  for (const k of Object.keys(process.env)) if (k.startsWith('AUTHNET_') || k === 'VERCEL_ENV' || ['RESEND_API_KEY', 'EMAIL_FROM', 'INTERNAL_NOTIFY_EMAIL', 'SANDBOX_NOTIFY_EMAIL', 'EMAIL_REPLY_TO', 'EMAIL_TIMEZONE'].includes(k)) delete process.env[k];
   Object.assign(process.env, ENV, extra);
   resetRateLimit();
 }
@@ -70,7 +72,7 @@ export const authnetDeclined = {
 
 /**
  * Installs a fake global fetch. Returns { calls, restore }.
- * overrides: { turnstile, authnet, insert, count } each a function returning a Response-ish or a status.
+ * overrides: { turnstile, authnet, insert, update, count, resend } each a function returning a Response-ish or a status.
  */
 export function installFetch(overrides = {}) {
   const calls = [];
@@ -84,7 +86,9 @@ export function installFetch(overrides = {}) {
     if (u.includes('supabase.co') && init.method === 'HEAD') {
       return overrides.count?.(init) ?? new Response(null, { status: 200, headers: { 'content-range': '*/0' } });
     }
-    if (u.includes('supabase.co')) return overrides.insert?.(init) ?? new Response(null, { status: 201 });
+    if (u.includes('api.resend.com')) return overrides.resend?.(init) ?? json({ id: 'email-1' });
+    if (u.includes('supabase.co') && init.method === 'PATCH') return overrides.update?.(init) ?? new Response(null, { status: 204 });
+    if (u.includes('supabase.co')) return overrides.insert?.(init) ?? json([{ id: 'row-1' }], 201);
     throw new Error(`unexpected fetch ${u}`);
   };
   return { calls, restore: () => { globalThis.fetch = orig; } };
