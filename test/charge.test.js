@@ -250,3 +250,10 @@ test('missing Resend config: charge still succeeds, nothing sent', async () => {
   assert.equal(res.body.receiptEmailSent, false);
   assert.equal(emailCalls(net.calls).length, 0);
 });
+
+test('internal subject labels the Expo account HBE; other accounts keep their codes', async () => {
+  const { buildInternal, accountLabel } = await import('../lib/emailTemplates.js');
+  assert.deepEqual(['hb', 'pw', 'expo', 'pwshow'].map(accountLabel), ['HB', 'PW', 'HBE', 'PWSHOW']);
+  const base = { environment: 'live', values: { company: 'Acme', firstName: 'A', lastName: 'B' }, amounts: { invoiceAmount: '1.00', convenienceFee: '0.03', totalCharged: '1.03' }, date: new Date(), cardType: 'Visa', last4: '1111', transactionId: '1' };
+  assert.equal(buildInternal({ ...base, account: 'expo' }).subject, '[HBE] Payment received — $1.03 — Acme');
+});
