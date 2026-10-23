@@ -22,7 +22,7 @@ test('approved: server recalculates total, calls sandbox Authorize.net, logs, re
 
   assert.equal(res.statusCode, 200);
   assert.deepEqual(res.body, {
-    ok: true, transactionId: '60123456789', last4: '1111', cardType: 'Visa',
+    ok: true, transactionId: '60123456789', last4: '1111', cardType: 'Visa', cardFunding: 'credit',
     invoiceAmount: '1000.00', convenienceFee: '30.00', totalCharged: '1030.00', receiptEmailSent: true,
   });
 
@@ -256,4 +256,50 @@ test('internal subject labels the Expo account HBE; other accounts keep their co
   assert.deepEqual(['hb', 'pw', 'expo', 'pwshow'].map(accountLabel), ['HB', 'PW', 'HBE', 'PWSHOW']);
   const base = { environment: 'live', values: { company: 'Acme', firstName: 'A', lastName: 'B' }, amounts: { invoiceAmount: '1.00', convenienceFee: '0.03', totalCharged: '1.03' }, date: new Date(), cardType: 'Visa', last4: '1111', transactionId: '1' };
   assert.equal(buildInternal({ ...base, account: 'expo' }).subject, '[HBE] Payment received — $1.03 — Acme');
+});
+
+// ---- Debit cards: no convenience fee ----
+
+const sentAmount = (calls) => JSON.parse(find(calls, 'authorize.net').init.body).createTransactionRequest.transactionRequest.amount;
+
+test('debit: no fee is charged, logged, returned, or emailed', async () => {
+  net = installFetch();
+  const res = await run(validBody({ cardFunding: 'debit', expectedTotal: '1000.00' }));
+  assert.equal(res.statusCode, 200);
+  assert.equal(sentAmount(net.calls), '1000.00');
+  assert.equal(res.body.convenienceFee, '0.00');
+  assert.equal(res.body.totalCharged, '1000.00');
+  assert.equal(res.body.cardFunding, 'debit');
+  const row = JSON.parse(find(net.calls, 'supabase.co', 'POST').init.body);
+  assert.equal(row.convenience_fee, '0.00');
+  assert.equal(row.total_charged, '1000.00');
+  assert.equal(row.card_type, 'Visa (debit)');
+  const [receipt, internal] = emailCalls(net.calls);
+  assert.ok(receipt.json.html.includes('no fee on debit cards'));
+  assert.ok(receipt.json.html.includes('Visa debit ending in 1111'));
+  assert.equal(internal.json.subject, '[SANDBOX] [PW] Payment received — $1,000.00 — Analytical Engines Inc');
+});
+
+test('credit (explicit, missing, or junk cardFunding) still pays the 3% fee', async () => {
+  for (const cardFunding of ['credit', undefined, 'prepaid', 'DEBIT', 7, null]) {
+    setEnv();
+    net = installFetch();
+    const res = await run(validBody({ cardFunding }));
+    assert.equal(res.statusCode, 200, String(cardFunding));
+    assert.equal(sentAmount(net.calls), '1030.00', String(cardFunding));
+    assert.equal(res.body.cardFunding, 'credit');
+    assert.equal(JSON.parse(find(net.calls, 'supabase.co', 'POST').init.body).card_type, 'Visa');
+    net.restore();
+  }
+});
+
+test('the total the customer saw must match the card type: a credit total with debit funding (or vice versa) is refused before any charge', async () => {
+  net = installFetch();
+  let res = await run(validBody({ cardFunding: 'debit', expectedTotal: '1030.00' }));
+  assert.equal(res.statusCode, 409);
+  assert.match(res.body.error, /total changed to \$1000\.00/);
+  net.restore(); setEnv(); net = installFetch();
+  res = await run(validBody({ cardFunding: 'credit', expectedTotal: '1000.00' }));
+  assert.equal(res.statusCode, 409);
+  assert.equal(find(net.calls, 'authorize.net'), undefined);
 });

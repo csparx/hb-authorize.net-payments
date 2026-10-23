@@ -50,7 +50,8 @@ export default async function handler(req, res) {
   }
 
   // 2. Recalculate fee + total server-side. Browser-sent totals are never used for the charge.
-  const amounts = computeAmounts(values.invoiceCents);
+  //    (Debit cards have no fee; that card type is browser-reported, see validate.js.)
+  const amounts = computeAmounts(values.invoiceCents, values.cardFunding);
   if (values.expectedTotal != null && values.expectedTotal !== amounts.totalCharged) {
     return sendJson(res, 409, {
       error: `The total changed to $${amounts.totalCharged}. Please review it and submit again.`,
@@ -112,7 +113,7 @@ export default async function handler(req, res) {
     state: values.state || null,
     zip: values.zip || null,
     signature_name: values.signatureName,
-    card_type: result.cardType || values.cardType,
+    card_type: `${result.cardType || values.cardType}${values.cardFunding === 'debit' ? ' (debit)' : ''}`,
     card_last4: result.last4,
     receipt_email_sent: false,
     internal_email_sent: false,
@@ -139,6 +140,7 @@ export default async function handler(req, res) {
       transactionId: result.transactionId,
       last4: result.last4,
       cardType: result.cardType || values.cardType,
+      cardFunding: values.cardFunding,
     });
     if (rowId && (emails.receipt || emails.internal)) {
       try {
@@ -155,6 +157,7 @@ export default async function handler(req, res) {
       transactionId: result.transactionId,
       last4: result.last4,
       cardType: result.cardType || values.cardType,
+      cardFunding: values.cardFunding,
       invoiceAmount: amounts.invoiceAmount,
       convenienceFee: amounts.convenienceFee,
       totalCharged: amounts.totalCharged,

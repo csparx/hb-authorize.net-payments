@@ -25,3 +25,14 @@ test('amount parsing is strict', () => {
     assert.equal(parseAmountToCents(bad), null, `should reject ${JSON.stringify(bad)}`);
   }
 });
+
+test('debit cards carry no convenience fee; credit/unknown still pay 3%', () => {
+  const c = parseAmountToCents('1234.56');
+  assert.deepEqual(
+    [computeAmounts(c, 'debit').convenienceFee, computeAmounts(c, 'debit').totalCharged],
+    ['0.00', '1234.56'],
+  );
+  assert.equal(computeAmounts(c, 'credit').totalCharged, '1271.60');
+  assert.equal(computeAmounts(c).totalCharged, '1271.60');
+  assert.equal(computeAmounts(c, 'prepaid-or-garbage').totalCharged, '1271.60');
+});
