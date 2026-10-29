@@ -391,6 +391,7 @@
       .then(function () {
         state.tsId = window.turnstile.render('#hbp-ts', {
           sitekey: state.cfg.turnstileSiteKey,
+          appearance: 'interaction-only',
           callback: function (t) { state.tsToken = t; setErr('turnstile', ''); },
           'expired-callback': function () { state.tsToken = ''; },
           'error-callback': function () { state.tsToken = ''; }
