@@ -1,0 +1,408 @@
+<!-- Hatton-Brown payment form. Paste this whole block into a Divi CODE module (not a Text module). -->
+<div id="hb-pay" data-account="hb">
+<style>
+#hb-pay{max-width:760px;margin:0 auto;font-family:Arial,Helvetica,sans-serif;color:#222;font-size:16px;line-height:1.4}
+#hb-pay *{box-sizing:border-box}
+#hb-pay fieldset{border:0;margin:0 0 24px;padding:0}
+#hb-pay legend{font-size:20px;font-weight:bold;margin:0 0 12px;padding:0}
+#hb-pay .hbp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+#hb-pay .hbp-full{grid-column:1/-1}
+#hb-pay .hbp-field{display:flex;flex-direction:column;min-width:0}
+#hb-pay label{font-weight:bold;font-size:14px;margin-bottom:4px}
+#hb-pay .hbp-opt{font-weight:normal;color:#666}
+#hb-pay input[type=text],#hb-pay input[type=email],#hb-pay input[type=tel],#hb-pay textarea{width:100%;padding:10px 12px;border:1px solid #999;border-radius:4px;font-size:16px;font-family:inherit;background:#fff;color:#222;height:auto}
+#hb-pay textarea{min-height:84px;resize:vertical}
+#hb-pay input[readonly]{background:#f0f0f0;color:#444}
+#hb-pay input:focus,#hb-pay textarea:focus{outline:3px solid #8ab4f8;outline-offset:0;border-color:#1a56c4}
+#hb-pay .hbp-invalid{border-color:#b00020!important}
+#hb-pay .hbp-err{color:#b00020;font-size:13px;min-height:0;margin-top:3px}
+#hb-pay .hbp-money{position:relative}
+#hb-pay .hbp-money span{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#555;pointer-events:none}
+#hb-pay .hbp-money input{padding-left:26px}
+#hb-pay .hbp-cardwrap{position:relative}
+#hb-pay .hbp-brand{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:bold;color:#fff;background:#666;border-radius:3px;padding:3px 8px;display:none}
+#hb-pay .hbp-brand.on{display:block}
+#hb-pay .hbp-brand.visa{background:#1a1f71}
+#hb-pay .hbp-brand.mastercard{background:#c0392b}
+#hb-pay .hbp-brand.discover{background:#e67e22}
+#hb-pay .hbp-brand.amex{background:#1b7fb8}
+#hb-pay .hbp-note{font-size:14px;margin-top:6px;min-height:0;color:#1b4d1f;font-weight:bold}
+#hb-pay .hbp-radios{margin-top:8px;padding:10px 12px;background:#fff3cd;border:1px solid #e0b100;border-radius:4px;font-size:14px}
+#hb-pay .hbp-radios label{display:inline-flex;align-items:center;gap:6px;font-weight:normal;font-size:15px;margin:6px 16px 0 0}
+#hb-pay .hbp-radios input{width:18px;height:18px}
+#hb-pay .hbp-check{display:flex;gap:10px;align-items:flex-start;margin-top:14px}
+#hb-pay .hbp-check input{margin-top:4px;width:20px;height:20px;flex:none}
+#hb-pay .hbp-check label{font-weight:normal;font-size:15px;margin:0}
+#hb-pay button.hbp-submit{display:block;width:100%;margin-top:18px;padding:14px;font-size:18px;font-weight:bold;color:#fff;background:#1a56c4;border:0;border-radius:4px;cursor:pointer}
+#hb-pay button.hbp-submit:disabled{background:#8a8a8a;cursor:not-allowed}
+#hb-pay .hbp-banner{padding:12px 14px;border-radius:4px;margin-bottom:18px;font-size:15px}
+#hb-pay .hbp-test{background:#fff3cd;border:1px solid #e0b100}
+#hb-pay .hbp-alert{background:#fdecea;border:1px solid #b00020;color:#7a0016}
+#hb-pay .hbp-ok{background:#e8f5e9;border:1px solid #2e7d32;color:#1b4d1f}
+#hb-pay .hbp-receipt{width:100%;border-collapse:collapse;margin:14px 0}
+#hb-pay .hbp-receipt th,#hb-pay .hbp-receipt td{text-align:left;padding:8px 10px;border-bottom:1px solid #ddd;font-size:15px}
+#hb-pay .hbp-receipt th{width:40%;color:#555;font-weight:normal}
+#hb-pay .hbp-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;overflow:hidden}
+#hb-pay [hidden]{display:none!important}
+@media (max-width:600px){#hb-pay .hbp-grid{grid-template-columns:1fr}}
+@media print{#hb-pay button{display:none}}
+</style>
+<div id="hbp-banner" class="hbp-banner" role="status" hidden></div>
+<div id="hbp-alert" class="hbp-banner hbp-alert" role="alert" hidden></div>
+<form id="hbp-form" novalidate autocomplete="on">
+<fieldset>
+<legend>Contact Information</legend>
+<div class="hbp-grid">
+<div class="hbp-field hbp-full"><label for="hbp-accountNumber">Account Number <span class="hbp-opt">(optional)</span></label><input type="text" id="hbp-accountNumber" data-f="accountNumber" maxlength="50" autocomplete="off"><div class="hbp-err" data-e="accountNumber"></div></div>
+<div class="hbp-field"><label for="hbp-firstName">First Name</label><input type="text" id="hbp-firstName" data-f="firstName" maxlength="50" autocomplete="given-name" required><div class="hbp-err" data-e="firstName"></div></div>
+<div class="hbp-field"><label for="hbp-lastName">Last Name</label><input type="text" id="hbp-lastName" data-f="lastName" maxlength="50" autocomplete="family-name" required><div class="hbp-err" data-e="lastName"></div></div>
+<div class="hbp-field hbp-full"><label for="hbp-company">Company</label><input type="text" id="hbp-company" data-f="company" maxlength="100" autocomplete="organization" required><div class="hbp-err" data-e="company"></div></div>
+<div class="hbp-field"><label for="hbp-city">City <span class="hbp-opt">(optional)</span></label><input type="text" id="hbp-city" data-f="city" maxlength="60" autocomplete="address-level2"><div class="hbp-err" data-e="city"></div></div>
+<div class="hbp-field"><label for="hbp-state">State <span class="hbp-opt">(optional)</span></label><input type="text" id="hbp-state" data-f="state" maxlength="40" autocomplete="address-level1"><div class="hbp-err" data-e="state"></div></div>
+<div class="hbp-field"><label for="hbp-zip">Zip <span class="hbp-opt">(optional)</span></label><input type="text" id="hbp-zip" data-f="zip" maxlength="20" autocomplete="postal-code"><div class="hbp-err" data-e="zip"></div></div>
+<div class="hbp-field"><label for="hbp-phone">Phone</label><input type="tel" id="hbp-phone" data-f="phone" maxlength="40" autocomplete="tel" required><div class="hbp-err" data-e="phone"></div></div>
+<div class="hbp-field hbp-full"><label for="hbp-email">Email <span class="hbp-opt">(your receipt is sent here)</span></label><input type="email" id="hbp-email" data-f="email" maxlength="100" autocomplete="email" required><div class="hbp-err" data-e="email"></div></div>
+</div>
+</fieldset>
+<fieldset>
+<legend>Payment Details</legend>
+<div class="hbp-grid">
+<div class="hbp-field"><label for="hbp-invoiceAmount">Invoice Amount</label><div class="hbp-money"><span>$</span><input type="text" id="hbp-invoiceAmount" data-f="invoiceAmount" inputmode="decimal" autocomplete="off" placeholder="0.00" required></div><div class="hbp-err" data-e="invoiceAmount"></div></div>
+<div class="hbp-field"><label for="hbp-invoiceNumber">Invoice Number <span class="hbp-opt">(optional)</span></label><input type="text" id="hbp-invoiceNumber" data-f="invoiceNumber" maxlength="50" autocomplete="off"><div class="hbp-err" data-e="invoiceNumber"></div></div>
+<div class="hbp-field"><label for="hbp-fee">Convenience Fee (3%, credit cards only)</label><div class="hbp-money"><span>$</span><input type="text" id="hbp-fee" readonly tabindex="-1" value="0.00" aria-live="polite"></div></div>
+<div class="hbp-field"><label for="hbp-total">Total Charged</label><div class="hbp-money"><span>$</span><input type="text" id="hbp-total" readonly tabindex="-1" value="0.00" aria-live="polite"></div></div>
+<div class="hbp-field hbp-full"><label for="hbp-chargeDescription">Charge Description</label><textarea id="hbp-chargeDescription" data-f="chargeDescription" maxlength="255" required></textarea><div class="hbp-err" data-e="chargeDescription"></div></div>
+</div>
+</fieldset>
+<fieldset>
+<legend>Card Information</legend>
+<div class="hbp-grid">
+<div class="hbp-field hbp-full"><label for="hbp-card">Card Number</label><div class="hbp-cardwrap"><input type="text" id="hbp-card" inputmode="numeric" autocomplete="cc-number" maxlength="24" required><span id="hbp-brand" class="hbp-brand" aria-live="polite"></span></div><div class="hbp-err" data-e="card"></div><div id="hbp-fundingNote" class="hbp-note" aria-live="polite"></div><div id="hbp-fundingManual" class="hbp-radios" hidden><div>We could not confirm your card type automatically. Is this a credit or a debit card?</div><label><input type="radio" name="hbp-funding" value="credit"> Credit</label><label><input type="radio" name="hbp-funding" value="debit"> Debit</label></div><div class="hbp-err" data-e="funding"></div></div>
+<div class="hbp-field"><label for="hbp-exp">Expiration (MM / YY)</label><input type="text" id="hbp-exp" inputmode="numeric" autocomplete="cc-exp" maxlength="7" placeholder="MM / YY" required><div class="hbp-err" data-e="exp"></div></div>
+<div class="hbp-field"><label for="hbp-cvv">Security Code (CVV)</label><input type="text" id="hbp-cvv" inputmode="numeric" autocomplete="cc-csc" maxlength="4" required><div class="hbp-err" data-e="cvv"></div></div>
+</div>
+</fieldset>
+<fieldset>
+<legend>Authorization</legend>
+<div class="hbp-field"><label for="hbp-signatureName">Electronic Signature <span class="hbp-opt">(type your full name)</span></label><input type="text" id="hbp-signatureName" data-f="signatureName" maxlength="100" autocomplete="name" required><div class="hbp-err" data-e="signatureName"></div></div>
+<div class="hbp-check"><input type="checkbox" id="hbp-agreed"><label for="hbp-agreed" id="hbp-agreedLabel">I authorize this charge to my card.</label></div>
+<div class="hbp-err" data-e="agreed"></div>
+<div class="hbp-hp" aria-hidden="true"><label for="hbp-hp">Leave this field empty</label><input type="text" id="hbp-hp" tabindex="-1" autocomplete="off"></div>
+<div id="hbp-ts" style="margin-top:16px"></div>
+<div class="hbp-err" data-e="turnstile"></div>
+<button type="submit" id="hbp-submit" class="hbp-submit" disabled>Loading&hellip;</button>
+</fieldset>
+</form>
+<div id="hbp-success" class="hbp-banner hbp-ok" role="status" hidden></div>
+<script>
+(function () {
+  'use strict';
+  /* ---- Change this one line to point at a different backend ---- */
+  var API_BASE = 'https://hb-authorizenet-payments.vercel.app';
+  var ACCOUNTS = ['hb', 'pw', 'expo', 'pwshow'];
+  var SLUGS = { payhb: 'hb', paypw: 'pw', payexpo: 'expo', paypwshow: 'pwshow' };
+  var root = document.getElementById('hb-pay');
+  var form = document.getElementById('hbp-form');
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { cfg: null, account: null, tsToken: '', tsId: null, busy: false, locked: false, funding: { bin: '', value: null, status: 'idle' }, lookupSeq: 0, cache: {}, lastTotal: null };
+  var LOOKUP_URL = 'https://data.handyapi.com/bin/';
+  /* ---------- account detection ---------- */
+  function detectAccount() {
+    var attr = root.getAttribute('data-account');
+    if (attr && ACCOUNTS.indexOf(attr) > -1) return attr;
+    var seg = location.pathname.replace(/\/+$/, '').split('/').pop().toLowerCase();
+    if (Object.prototype.hasOwnProperty.call(SLUGS, seg)) return SLUGS[seg];
+    var q = new URLSearchParams(location.search).get('account');
+    return q && ACCOUNTS.indexOf(q) > -1 ? q : null;
+  }
+  /* ---------- money (integer cents; must match the server) ---------- */
+  function parseCents(s) {
+    s = String(s).replace(/[\s$,]/g, '');
+    if (!/^\d{1,6}(\.\d{1,2})?$/.test(s)) return null;
+    var p = s.split('.');
+    var c = Number(p[0]) * 100 + Number((p[1] || '').padEnd(2, '0'));
+    return c < 1 || c > 99999999 ? null : c;
+  }
+  function feeOf(c) { return Math.floor((c * 3 + 50) / 100); }
+  function plain(c) { return Math.floor(c / 100) + '.' + String(c % 100).padStart(2, '0'); }
+  function pretty(c) { return Math.floor(c / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + String(c % 100).padStart(2, '0'); }
+  function effectiveFunding() {
+    var f = state.funding;
+    if (f.status === 'ok') return f.value;
+    if (f.status === 'unknown') { var r = form.querySelector('input[name="hbp-funding"]:checked'); return r ? r.value : null; }
+    return null;
+  }
+  function recalc() {
+    var c = parseCents($('hbp-invoiceAmount').value);
+    var fee = c == null || effectiveFunding() === 'debit' ? 0 : feeOf(c);
+    var total = c == null ? 0 : c + fee;
+    $('hbp-fee').value = pretty(fee);
+    $('hbp-total').value = pretty(total);
+    $('hbp-agreedLabel').textContent = c == null ? 'I authorize this charge to my card.' : 'I authorize Hatton-Brown to charge $' + pretty(total) + ' to my card.';
+    if (!state.busy && !state.locked && state.cfg) $('hbp-submit').textContent = c == null ? 'Submit Payment' : 'Pay $' + pretty(total);
+    /* If the total changes after the customer agreed, they must agree to the new total */
+    if (state.lastTotal !== null && total !== state.lastTotal && $('hbp-agreed').checked) {
+      $('hbp-agreed').checked = false;
+      setErr('agreed', 'Your total changed to $' + pretty(total) + '. Please review it and tick the authorization box again.');
+    }
+    state.lastTotal = total;
+    return c == null ? null : { invoice: c, fee: fee, total: total };
+  }
+  /* ---------- credit / debit (debit cards carry no convenience fee) ---------- */
+  function renderFunding() {
+    var f = state.funding, e = effectiveFunding(), t = '';
+    $('hbp-fundingManual').hidden = f.status !== 'unknown';
+    if (f.status === 'loading') t = 'Checking card type…';
+    else if (e === 'debit') t = 'Debit card — no convenience fee.';
+    else if (e === 'credit') t = 'Credit card — a 3% convenience fee applies.';
+    $('hbp-fundingNote').textContent = t;
+  }
+  function setFunding(bin, value, status) {
+    state.funding = { bin: bin, value: value, status: status };
+    renderFunding();
+    recalc();
+  }
+  function clearManualFunding() { Array.prototype.forEach.call(form.querySelectorAll('input[name="hbp-funding"]'), function (r) { r.checked = false; }); setErr('funding', ''); }
+  function lookupFunding(bin) {
+    clearManualFunding();
+    if (state.cache[bin]) return setFunding(bin, state.cache[bin].value, state.cache[bin].status);
+    var seq = ++state.lookupSeq;
+    setFunding(bin, null, 'loading');
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 6000);
+    fetch(LOOKUP_URL + bin, { signal: ctrl.signal })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        clearTimeout(timer);
+        if (seq !== state.lookupSeq) return;
+        var t = d && d.Status === 'SUCCESS' && typeof d.Type === 'string' ? d.Type.toUpperCase() : '';
+        if (t === 'DEBIT' || t === 'CREDIT') { state.cache[bin] = { value: t.toLowerCase(), status: 'ok' }; setFunding(bin, t.toLowerCase(), 'ok'); }
+        else setFunding(bin, null, 'unknown');
+      }, function () { clearTimeout(timer); if (seq !== state.lookupSeq) return; setFunding(bin, null, 'unknown'); });
+  }
+  /* ---------- card helpers ---------- */
+  var BRANDS = { '4': ['Visa', 'visa'], '5': ['Mastercard', 'mastercard'], '6': ['Discover', 'discover'], '3': ['Amex', 'amex'] };
+  function brandOf(d) { return BRANDS[d.charAt(0)] || null; }
+  function luhn(d) {
+    var sum = 0, alt = false;
+    for (var i = d.length - 1; i >= 0; i--) { var n = d.charCodeAt(i) - 48; if (alt) { n *= 2; if (n > 9) n -= 9; } sum += n; alt = !alt; }
+    return sum % 10 === 0;
+  }
+  function onCard() {
+    var d = $('hbp-card').value.replace(/\D/g, '');
+    var amex = d.charAt(0) === '3';
+    d = d.slice(0, amex ? 15 : 19);
+    var g = amex ? [4, 6, 5] : [4, 4, 4, 4, 3], out = [], pos = 0;
+    for (var i = 0; i < g.length && pos < d.length; i++) { out.push(d.substr(pos, g[i])); pos += g[i]; }
+    $('hbp-card').value = out.join(' ');
+    var b = brandOf(d), el = $('hbp-brand');
+    el.className = 'hbp-brand' + (b ? ' on ' + b[1] : '');
+    el.textContent = b ? b[0] : '';
+    $('hbp-cvv').maxLength = amex ? 4 : 3;
+    $('hbp-cvv').value = $('hbp-cvv').value.replace(/\D/g, '').slice(0, amex ? 4 : 3);
+    var bin = d.length >= 8 && brandOf(d) ? d.slice(0, 8) : '';
+    if (bin !== state.funding.bin) {
+      if (bin) lookupFunding(bin);
+      else { state.lookupSeq++; clearManualFunding(); setFunding('', null, 'idle'); }
+    }
+  }
+  function onExp() {
+    var d = $('hbp-exp').value.replace(/\D/g, '').slice(0, 4);
+    if (d.length === 1 && Number(d) > 1) d = '0' + d;
+    $('hbp-exp').value = d.length > 2 ? d.slice(0, 2) + ' / ' + d.slice(2) : d;
+  }
+  function parseExp() {
+    var d = $('hbp-exp').value.replace(/\D/g, '');
+    if (d.length !== 4) return null;
+    var m = Number(d.slice(0, 2)), y = 2000 + Number(d.slice(2));
+    if (m < 1 || m > 12) return null;
+    var now = new Date();
+    if (y < now.getFullYear() || (y === now.getFullYear() && m < now.getMonth() + 1)) return null;
+    return { month: d.slice(0, 2), year: String(y) };
+  }
+  /* ---------- UI helpers ---------- */
+  function setErr(key, msg) {
+    var e = form.querySelector('[data-e="' + key + '"]');
+    if (e) e.textContent = msg || '';
+    var input = key === 'card' ? $('hbp-card') : key === 'exp' ? $('hbp-exp') : key === 'cvv' ? $('hbp-cvv') : $('hbp-' + key);
+    if (input) { if (msg) input.classList.add('hbp-invalid'); else input.classList.remove('hbp-invalid'); }
+  }
+  function clearErrors() {
+    Array.prototype.forEach.call(form.querySelectorAll('[data-e]'), function (e) { setErr(e.getAttribute('data-e'), ''); });
+    $('hbp-alert').hidden = true;
+  }
+  function showAlert(msg) {
+    var a = $('hbp-alert');
+    a.textContent = msg;
+    a.hidden = false;
+    a.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  function setBusy(b) {
+    state.busy = b;
+    var btn = $('hbp-submit');
+    btn.disabled = b || state.locked;
+    if (b) btn.textContent = 'Processing… please do not refresh or close this page';
+    else recalc();
+  }
+  window.addEventListener('beforeunload', function (e) { if (state.busy) { e.preventDefault(); e.returnValue = ''; } });
+  /* ---------- validation ---------- */
+  var REQUIRED = { firstName: 'First name', lastName: 'Last name', company: 'Company', phone: 'Phone', email: 'Email', chargeDescription: 'Charge description', signatureName: 'Electronic signature' };
+  function validate() {
+    var errs = [];
+    Object.keys(REQUIRED).forEach(function (k) { if (!$('hbp-' + k).value.trim()) errs.push([k, REQUIRED[k] + ' is required.']); });
+    var em = $('hbp-email').value.trim();
+    if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) errs.push(['email', 'Enter a valid email address.']);
+    if (parseCents($('hbp-invoiceAmount').value) == null) errs.push(['invoiceAmount', 'Enter a valid invoice amount, e.g. 1234.56.']);
+    var d = $('hbp-card').value.replace(/\D/g, '');
+    if (d.length < 13 || !luhn(d)) errs.push(['card', 'Enter a valid card number.']);
+    else if (!brandOf(d)) errs.push(['card', 'We accept Visa, Mastercard, Discover and American Express.']);
+    if (!parseExp()) errs.push(['exp', 'Enter a valid, unexpired date (MM / YY).']);
+    if (d.length >= 8 && state.funding.status === 'loading') errs.push(['card', 'Still checking your card type — please wait a moment and try again.']);
+    if (state.funding.status === 'unknown' && !effectiveFunding()) errs.push(['funding', 'Please tell us whether this is a credit or a debit card.']);
+    var cvvLen = d.charAt(0) === '3' ? 4 : 3;
+    if ($('hbp-cvv').value.replace(/\D/g, '').length !== cvvLen) errs.push(['cvv', 'Enter the ' + cvvLen + '-digit security code.']);
+    if (!$('hbp-agreed').checked) errs.push(['agreed', 'You must agree to be charged the total shown.']);
+    if (!state.tsToken) errs.push(['turnstile', 'Please complete the security check.']);
+    return errs;
+  }
+  /* ---------- Accept.js ---------- */
+  var HIDE_FROM_USER = /E_WC_(10|11|12|13|14|16|17|18|19|20|21)|E00/;
+  function tokenize() {
+    return new Promise(function (resolve, reject) {
+      var exp = parseExp();
+      var data = {
+        authData: { clientKey: state.cfg.clientKey, apiLoginID: state.cfg.apiLoginId },
+        cardData: { cardNumber: $('hbp-card').value.replace(/\D/g, ''), month: exp.month, year: exp.year, cardCode: $('hbp-cvv').value }
+      };
+      window.Accept.dispatchData(data, function (resp) {
+        if (resp.messages.resultCode === 'Error') {
+          var m = resp.messages.message[0];
+          reject(new Error(HIDE_FROM_USER.test(m.code) ? 'The payment system is temporarily unavailable. Please contact Hatton-Brown.' : m.text));
+        } else resolve(resp.opaqueData);
+      });
+    });
+  }
+  function clearCard() { $('hbp-card').value = ''; $('hbp-exp').value = ''; $('hbp-cvv').value = ''; onCard(); }
+  /* ---------- submit ---------- */
+  function lockUnknown() {
+    state.locked = true;
+    setBusy(false);
+    $('hbp-submit').disabled = true;
+    $('hbp-submit').textContent = 'Please contact Hatton-Brown before trying again';
+    showAlert('We could not confirm whether your payment went through. Please do NOT submit again. Contact Hatton-Brown to check before trying again.');
+  }
+  function resetTurnstile() { state.tsToken = ''; if (window.turnstile && state.tsId != null) window.turnstile.reset(state.tsId); }
+  function showSuccess(r, email) {
+    form.hidden = true;
+    $('hbp-alert').hidden = true;
+    var debit = r.cardFunding === 'debit';
+    var rows = [['Transaction ID', r.transactionId], ['Card', (r.cardType || 'Card') + (debit ? ' debit' : '') + ' ending in ' + r.last4], ['Invoice amount', '$' + pretty(parseCents(r.invoiceAmount))], debit ? ['Convenience fee', '$0.00 (no fee on debit cards)'] : ['Convenience fee (3%)', '$' + pretty(parseCents(r.convenienceFee) || 0)], ['Total charged', '$' + pretty(parseCents(r.totalCharged))]];
+    var box = $('hbp-success');
+    box.textContent = '';
+    var h = document.createElement('h3'); h.textContent = 'Payment received — thank you!'; h.style.margin = '0 0 8px'; box.appendChild(h);
+    var p = document.createElement('p');
+    p.textContent = r.receiptEmailSent ? 'A receipt has been emailed to ' + email + '.' : 'We could not send a receipt email. Please print or save this page as your receipt.';
+    box.appendChild(p);
+    var t = document.createElement('table'); t.className = 'hbp-receipt';
+    rows.forEach(function (row) { var tr = document.createElement('tr'), th = document.createElement('th'), td = document.createElement('td'); th.textContent = row[0]; td.textContent = row[1]; tr.appendChild(th); tr.appendChild(td); t.appendChild(tr); });
+    box.appendChild(t);
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'hbp-submit'; b.textContent = 'Print this page'; b.onclick = function () { window.print(); };
+    box.appendChild(b);
+    box.hidden = false;
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (state.busy || state.locked || !state.cfg) return;
+    clearErrors();
+    var errs = validate();
+    if (errs.length) {
+      errs.forEach(function (e) { setErr(e[0], e[1]); });
+      var first = errs[0][0];
+      var el = first === 'turnstile' ? $('hbp-ts') : first === 'card' || first === 'funding' ? $('hbp-card') : first === 'exp' ? $('hbp-exp') : first === 'cvv' ? $('hbp-cvv') : $('hbp-' + first);
+      if (el && el.focus) el.focus();
+      return;
+    }
+    setBusy(true);
+    var amounts = recalc();
+    tokenize().then(function (opaque) {
+      var payload = {
+        account: state.account,
+        accountNumber: $('hbp-accountNumber').value.trim(), firstName: $('hbp-firstName').value.trim(), lastName: $('hbp-lastName').value.trim(),
+        company: $('hbp-company').value.trim(), city: $('hbp-city').value.trim(), state: $('hbp-state').value.trim(), zip: $('hbp-zip').value.trim(),
+        phone: $('hbp-phone').value.trim(), email: $('hbp-email').value.trim(),
+        invoiceAmount: plain(amounts.invoice), invoiceNumber: $('hbp-invoiceNumber').value.trim(), chargeDescription: $('hbp-chargeDescription').value.trim(),
+        signatureName: $('hbp-signatureName').value.trim(), agreed: true,
+        cardType: (brandOf($('hbp-card').value.replace(/\D/g, '')) || ['Unknown'])[0],
+        cardFunding: effectiveFunding() || 'credit',
+        expectedTotal: plain(amounts.total),
+        opaqueData: { dataDescriptor: opaque.dataDescriptor, dataValue: opaque.dataValue },
+        turnstileToken: state.tsToken,
+        hb_contact_pref: $('hbp-hp').value
+      };
+      var ctrl = new AbortController();
+      var timer = setTimeout(function () { ctrl.abort(); }, 45000);
+      return fetch(API_BASE + '/api/charge', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: ctrl.signal })
+        .then(function (resp) {
+          clearTimeout(timer);
+          return resp.json().then(function (data) { return { status: resp.status, data: data }; }, function () { return { status: resp.status, data: null }; });
+        })
+        .then(function (r) {
+          resetTurnstile();
+          if (!r.data) return lockUnknown();
+          if (r.status === 200 && r.data.ok) {
+            clearCard(); state.locked = true; setBusy(false); return showSuccess(r.data, payload.email);
+          }
+          if (r.status === 402 || r.status === 502) clearCard();
+          if (r.data.fields) Object.keys(r.data.fields).forEach(function (k) { setErr(k === 'turnstileToken' ? 'turnstile' : k === 'opaqueData' ? 'card' : k, r.data.fields[k]); });
+          setBusy(false);
+          showAlert(r.data.error || 'We could not process your payment. Please try again.');
+        }, function () { clearTimeout(timer); resetTurnstile(); lockUnknown(); });
+    }, function (err) { setBusy(false); showAlert(err.message || 'We could not read your card details. Please check them and try again.'); });
+  });
+  /* ---------- wiring ---------- */
+  $('hbp-invoiceAmount').addEventListener('input', recalc);
+  $('hbp-invoiceAmount').addEventListener('blur', function () { var c = parseCents(this.value); if (c != null) this.value = plain(c); });
+  $('hbp-card').addEventListener('input', onCard);
+  $('hbp-exp').addEventListener('input', onExp);
+  form.addEventListener('change', function (e) { if (e.target && e.target.name === 'hbp-funding') { setErr('funding', ''); renderFunding(); recalc(); } });
+  $('hbp-cvv').addEventListener('input', function () { this.value = this.value.replace(/\D/g, ''); });
+  function loadScript(src) {
+    return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = src; s.async = true; s.onload = res; s.onerror = function () { rej(new Error('Could not load ' + src)); }; document.head.appendChild(s); });
+  }
+  function fatal(msg) { $('hbp-submit').textContent = 'Unavailable'; showAlert(msg); }
+  function init() {
+    state.account = detectAccount();
+    if (!state.account) return fatal('This payment page is not set up correctly. Please contact Hatton-Brown.');
+    fetch(API_BASE + '/api/config?account=' + encodeURIComponent(state.account))
+      .then(function (r) { if (!r.ok) throw new Error('config'); return r.json(); })
+      .then(function (cfg) {
+        if (!cfg.turnstileSiteKey) throw new Error('config');
+        state.cfg = cfg;
+        if (cfg.environment === 'sandbox') {
+          var b = $('hbp-banner');
+          b.className = 'hbp-banner hbp-test';
+          b.textContent = 'TEST MODE — no real charges are made. Test cards (any future expiration, CVV 123): 5424 0000 0000 0015 is read as a credit card (3% fee); 4111 1111 1111 1111 is read as a debit card (no fee).';
+          b.hidden = false;
+        }
+        var acceptUrl = cfg.environment === 'sandbox' ? 'https://jstest.authorize.net/v1/Accept.js' : 'https://js.authorize.net/v1/Accept.js';
+        return Promise.all([loadScript(acceptUrl), loadScript('https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit')]);
+      })
+      .then(function () {
+        state.tsId = window.turnstile.render('#hbp-ts', {
+          sitekey: state.cfg.turnstileSiteKey,
+          appearance: 'interaction-only',
+          callback: function (t) { state.tsToken = t; setErr('turnstile', ''); },
+          'expired-callback': function () { state.tsToken = ''; },
+          'error-callback': function () { state.tsToken = ''; }
+        });
+        $('hbp-submit').disabled = false;
+        recalc();
+      })
+      .catch(function () { fatal('The payment form could not load. Please refresh the page or contact Hatton-Brown.'); });
+  }
+  recalc();
+  init();
+})();
+</script>
+</div>
