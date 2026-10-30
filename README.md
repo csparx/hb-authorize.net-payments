@@ -71,7 +71,7 @@ Notes on behavior:
 
 ## Environment variables
 See `.env.example`. Per account (`HB`, `PW`, `EXPO`, `PWSHOW`): `AUTHNET_{ACCT}_LOGIN_ID|TXN_KEY|CLIENT_KEY` (live) and
-`AUTHNET_SANDBOX_{ACCT}_LOGIN_ID|TXN_KEY|CLIENT_KEY` (sandbox). `AUTHNET_SANDBOX_MODE=true` selects sandbox endpoints + credentials.
+`AUTHNET_SANDBOX_{ACCT}_LOGIN_ID|TXN_KEY|CLIENT_KEY` (sandbox). **In sandbox mode only**, an account with no sandbox credentials of its own uses Panel World's (`AUTHNET_SANDBOX_PW_*`), so one sandbox account can serve all four pages while testing. Live mode never falls back. `AUTHNET_SANDBOX_MODE=true` selects sandbox endpoints + credentials.
 Also `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and for email `RESEND_API_KEY`, `EMAIL_FROM` (optional: `INTERNAL_NOTIFY_EMAIL`, `SANDBOX_NOTIFY_EMAIL`, `EMAIL_REPLY_TO`, `EMAIL_TIMEZONE`).
 
 ## Database
