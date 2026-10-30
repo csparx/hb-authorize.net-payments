@@ -303,3 +303,48 @@ test('the total the customer saw must match the card type: a credit total with d
   assert.equal(res.statusCode, 409);
   assert.equal(find(net.calls, 'authorize.net'), undefined);
 });
+
+// ---- Per-account live switch (AUTHNET_LIVE_ACCOUNTS) ----
+
+const LIVE_PW = { AUTHNET_LIVE_ACCOUNTS: 'pw', AUTHNET_PW_LOGIN_ID: 'liveL', AUTHNET_PW_TXN_KEY: 'liveT', AUTHNET_PW_CLIENT_KEY: 'liveC' };
+
+test('only the named account goes live: PW charges the live gateway, HB stays in sandbox', async () => {
+  setEnv(LIVE_PW); // AUTHNET_SANDBOX_MODE stays "true"
+  net = installFetch();
+  const pw = await run(validBody({ account: 'pw' }));
+  assert.equal(pw.statusCode, 200);
+  const pwCall = net.calls.find((c) => c.url.includes('authorize.net'));
+  assert.equal(pwCall.url, 'https://api.authorize.net/xml/v1/request.api');
+  assert.deepEqual(JSON.parse(pwCall.init.body).createTransactionRequest.merchantAuthentication, { name: 'liveL', transactionKey: 'liveT' });
+  assert.equal(JSON.parse(find(net.calls, 'supabase.co', 'POST').init.body).environment, 'live');
+
+  net.restore(); net = installFetch();
+  const hb = await run(validBody({ account: 'hb' }), { ip: '198.51.100.20' });
+  assert.equal(hb.statusCode, 200);
+  const hbCall = net.calls.find((c) => c.url.includes('authorize.net'));
+  assert.equal(hbCall.url, 'https://apitest.authorize.net/xml/v1/request.api');
+  assert.deepEqual(JSON.parse(hbCall.init.body).createTransactionRequest.merchantAuthentication, { name: 'pwLogin', transactionKey: 'pwSecretTxnKey' });
+  assert.equal(JSON.parse(find(net.calls, 'supabase.co', 'POST').init.body).environment, 'sandbox');
+});
+
+test('a live account with no live credentials is unavailable; it never falls back to sandbox', async () => {
+  setEnv({ AUTHNET_LIVE_ACCOUNTS: 'hb' }); // HB marked live, but no AUTHNET_HB_* values
+  net = installFetch();
+  const res = await run(validBody({ account: 'hb' }));
+  assert.equal(res.statusCode, 500);
+  assert.equal(find(net.calls, 'authorize.net'), undefined);
+});
+
+test('emails follow each payment: live PW goes to INTERNAL_NOTIFY_EMAIL, sandbox HB to SANDBOX_NOTIFY_EMAIL', async () => {
+  setEnv({ ...LIVE_PW, INTERNAL_NOTIFY_EMAIL: 'team@example.com', SANDBOX_NOTIFY_EMAIL: 'tester@example.com' });
+  net = installFetch();
+  await run(validBody({ account: 'pw' }));
+  let [, internal] = emailCalls(net.calls);
+  assert.deepEqual(internal.json.to, ['team@example.com']);
+  assert.equal(internal.json.subject.startsWith('[SANDBOX]'), false);
+  net.restore(); net = installFetch();
+  await run(validBody({ account: 'hb' }), { ip: '198.51.100.21' });
+  [, internal] = emailCalls(net.calls);
+  assert.deepEqual(internal.json.to, ['tester@example.com']);
+  assert.ok(internal.json.subject.startsWith('[SANDBOX] [HB]'));
+});

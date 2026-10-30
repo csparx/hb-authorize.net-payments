@@ -84,3 +84,23 @@ test('CORS: disallowed origin blocked, preflight answered, localhost only outsid
   handler(mockReq({ method: 'GET', origin: 'http://localhost:8080', query: { account: 'pw' } }), res);
   assert.equal(res.statusCode, 403);
 });
+
+test('AUTHNET_LIVE_ACCOUNTS: the named account reports live with its own keys, the others stay sandbox', () => {
+  setEnv({ AUTHNET_LIVE_ACCOUNTS: ' PW , ', AUTHNET_PW_LOGIN_ID: 'liveL', AUTHNET_PW_TXN_KEY: 'liveT', AUTHNET_PW_CLIENT_KEY: 'liveC' });
+  let res = mockRes();
+  handler(mockReq({ method: 'GET', query: { account: 'pw' } }), res);
+  assert.deepEqual([res.body.apiLoginId, res.body.environment], ['liveL', 'live']);
+  assert.equal(JSON.stringify(res.body).includes('liveT'), false);
+  res = mockRes();
+  handler(mockReq({ method: 'GET', query: { account: 'hb' } }), res);
+  assert.deepEqual([res.body.apiLoginId, res.body.environment], ['pwLogin', 'sandbox']);
+});
+
+test('AUTHNET_LIVE_ACCOUNTS unset or empty changes nothing', () => {
+  for (const v of [undefined, '', '  ']) {
+    setEnv(v === undefined ? {} : { AUTHNET_LIVE_ACCOUNTS: v });
+    const res = mockRes();
+    handler(mockReq({ method: 'GET', query: { account: 'pw' } }), res);
+    assert.equal(res.body.environment, 'sandbox');
+  }
+});
