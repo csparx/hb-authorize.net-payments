@@ -69,7 +69,7 @@
 <div class="hbp-grid">
 <div class="hbp-field"><label for="hbp-invoiceAmount">Invoice Amount</label><div class="hbp-money"><span>$</span><input type="text" id="hbp-invoiceAmount" data-f="invoiceAmount" inputmode="decimal" autocomplete="off" placeholder="0.00" required></div><div class="hbp-err" data-e="invoiceAmount"></div></div>
 <div class="hbp-field"><label for="hbp-invoiceNumber">Invoice Number <span class="hbp-opt">(optional)</span></label><input type="text" id="hbp-invoiceNumber" data-f="invoiceNumber" maxlength="50" autocomplete="off"><div class="hbp-err" data-e="invoiceNumber"></div></div>
-<div class="hbp-field"><label for="hbp-fee">Convenience Fee (3%, credit cards only)</label><div class="hbp-money"><span>$</span><input type="text" id="hbp-fee" readonly tabindex="-1" value="0.00" aria-live="polite"></div></div>
+<div class="hbp-field"><label for="hbp-fee">Surcharge (3%, credit cards only)</label><div class="hbp-money"><span>$</span><input type="text" id="hbp-fee" readonly tabindex="-1" value="0.00" aria-live="polite"></div></div>
 <div class="hbp-field"><label for="hbp-total">Total Charged</label><div class="hbp-money"><span>$</span><input type="text" id="hbp-total" readonly tabindex="-1" value="0.00" aria-live="polite"></div></div>
 <div class="hbp-field hbp-full"><label for="hbp-chargeDescription">Charge Description</label><textarea id="hbp-chargeDescription" data-f="chargeDescription" maxlength="255" required></textarea><div class="hbp-err" data-e="chargeDescription"></div></div>
 </div>
@@ -148,13 +148,13 @@
     state.lastTotal = total;
     return c == null ? null : { invoice: c, fee: fee, total: total };
   }
-  /* ---------- credit / debit (debit cards carry no convenience fee) ---------- */
+  /* ---------- credit / debit (debit cards carry no surcharge) ---------- */
   function renderFunding() {
     var f = state.funding, e = effectiveFunding(), t = '';
     $('hbp-fundingManual').hidden = f.status !== 'unknown';
     if (f.status === 'loading') t = 'Checking card type…';
-    else if (e === 'debit') t = 'Debit card — no convenience fee.';
-    else if (e === 'credit') t = 'Credit card — a 3% convenience fee applies.';
+    else if (e === 'debit') t = 'Debit card — no surcharge.';
+    else if (e === 'credit') t = 'Credit card — a 3% surcharge applies.';
     $('hbp-fundingNote').textContent = t;
   }
   function setFunding(bin, value, status) {
@@ -296,7 +296,7 @@
     form.hidden = true;
     $('hbp-alert').hidden = true;
     var debit = r.cardFunding === 'debit';
-    var rows = [['Transaction ID', r.transactionId], ['Card', (r.cardType || 'Card') + (debit ? ' debit' : '') + ' ending in ' + r.last4], ['Invoice amount', '$' + pretty(parseCents(r.invoiceAmount))], debit ? ['Convenience fee', '$0.00 (no fee on debit cards)'] : ['Convenience fee (3%)', '$' + pretty(parseCents(r.convenienceFee) || 0)], ['Total charged', '$' + pretty(parseCents(r.totalCharged))]];
+    var rows = [['Transaction ID', r.transactionId], ['Card', (r.cardType || 'Card') + (debit ? ' debit' : '') + ' ending in ' + r.last4], ['Invoice amount', '$' + pretty(parseCents(r.invoiceAmount))], debit ? ['Surcharge', '$0.00 (no surcharge on debit cards)'] : ['Surcharge (3%)', '$' + pretty(parseCents(r.convenienceFee) || 0)], ['Total charged', '$' + pretty(parseCents(r.totalCharged))]];
     var box = $('hbp-success');
     box.textContent = '';
     var h = document.createElement('h3'); h.textContent = 'Payment received — thank you!'; h.style.margin = '0 0 8px'; box.appendChild(h);
@@ -382,7 +382,7 @@
         if (cfg.environment === 'sandbox') {
           var b = $('hbp-banner');
           b.className = 'hbp-banner hbp-test';
-          b.textContent = 'TEST MODE — no real charges are made. Test cards (any future expiration, CVV 123): 5424 0000 0000 0015 is read as a credit card (3% fee); 4111 1111 1111 1111 is read as a debit card (no fee).';
+          b.textContent = 'TEST MODE — no real charges are made. Test cards (any future expiration, CVV 123): 5424 0000 0000 0015 is read as a credit card (3% surcharge); 4111 1111 1111 1111 is read as a debit card (no surcharge).';
           b.hidden = false;
         }
         var acceptUrl = cfg.environment === 'sandbox' ? 'https://jstest.authorize.net/v1/Accept.js' : 'https://js.authorize.net/v1/Accept.js';

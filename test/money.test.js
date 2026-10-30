@@ -26,7 +26,7 @@ test('amount parsing is strict', () => {
   }
 });
 
-test('debit cards carry no convenience fee; credit/unknown still pay 3%', () => {
+test('debit cards carry no surcharge; credit/unknown still pay 3%', () => {
   const c = parseAmountToCents('1234.56');
   assert.deepEqual(
     [computeAmounts(c, 'debit').convenienceFee, computeAmounts(c, 'debit').totalCharged],

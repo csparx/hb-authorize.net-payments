@@ -258,7 +258,7 @@ test('internal subject labels the Expo account HBE; other accounts keep their co
   assert.equal(buildInternal({ ...base, account: 'expo' }).subject, '[HBE] Payment received — $1.03 — Acme');
 });
 
-// ---- Debit cards: no convenience fee ----
+// ---- Debit cards: no surcharge ----
 
 const sentAmount = (calls) => JSON.parse(find(calls, 'authorize.net').init.body).createTransactionRequest.transactionRequest.amount;
 
@@ -275,7 +275,7 @@ test('debit: no fee is charged, logged, returned, or emailed', async () => {
   assert.equal(row.total_charged, '1000.00');
   assert.equal(row.card_type, 'Visa (debit)');
   const [receipt, internal] = emailCalls(net.calls);
-  assert.ok(receipt.json.html.includes('no fee on debit cards'));
+  assert.ok(receipt.json.html.includes('no surcharge on debit cards'));
   assert.ok(receipt.json.html.includes('Visa debit ending in 1111'));
   assert.equal(internal.json.subject, '[SANDBOX] [PW] Payment received — $1,000.00 — Analytical Engines Inc');
 });
